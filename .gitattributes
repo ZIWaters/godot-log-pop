@@ -1,0 +1,3 @@
+# Applies to `git archive` only (not GitHub's "Download ZIP" button).
+.gitignore export-ignore
+.gitattributes export-ignore
