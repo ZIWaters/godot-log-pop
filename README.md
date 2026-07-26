@@ -1,12 +1,14 @@
 # LogPop (GDScript)
 
-In-game log viewer for **Godot 4**. Shows print / warning / error messages in an overlay while the game is running.
+A **lightweight** in-game log viewer for **Godot 4**. Shows print / warning / error messages in an overlay while the game is running.
+
+Pure GDScript — **no .NET required**. Works in both **GDScript** and **C#** projects.
 
 ---
 
 ## Requirements
 
-- Godot **4.5** or newer
+- Godot **4.5** or newer (standard or .NET build)
 
 ## Install
 
@@ -30,11 +32,13 @@ In-game log viewer for **Godot 4**. Shows print / warning / error messages in an
 
 # 中文
 
-面向 **Godot 4** 的游戏内日志查看器（纯 GDScript）。运行游戏时可在浮层中查看 print / 警告 / 错误信息。
+面向 **Godot 4** 的**轻量**游戏内日志查看器（纯 GDScript）。运行游戏时可在浮层中查看 print / 警告 / 错误信息。
+
+不依赖 .NET，**GDScript 项目与 C# 项目均可使用**。
 
 ## 运行要求
 
-- Godot **4.5** 及以上
+- Godot **4.5** 及以上（标准版或 .NET 版均可）
 
 ## 安装
 
