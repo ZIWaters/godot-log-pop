@@ -5,6 +5,7 @@ signal log_added
 ## Fired at most once per idle flush if any error-level log was added.
 signal error_logged
 
+const LogPopUtils = preload("log_utils.gd")
 const MAX_STORED_LOGS := 2000
 
 var _logs: Array[Dictionary] = []
@@ -12,17 +13,30 @@ var _logger: CustomLogger
 var _notify_pending := false
 var _needs_rebuild := false
 var _had_error_in_batch := false
+## True while OS.add_logger is active. Cleared on exit_tree (incl. parent Reparent).
+var _logger_registered := false
 
 
-# Custom loggers must be thread-safe, as they may be called from non-main threads.
-# We use call_deferred() to ensure _logs is modified from the main thread.
+# Logger callbacks may run off the main thread — never touch Node from here.
+# Queue on this RefCounted Logger; handler drains on the main thread.
 class CustomLogger extends Logger:
-	var handler: Node
+	var _mutex := Mutex.new()
+	var _pending: Array = [] # { "level": String, "message": String }
+
+	func steal_pending() -> Array:
+		_mutex.lock()
+		var batch: Array = _pending.duplicate()
+		_pending.clear()
+		_mutex.unlock()
+		return batch
+
+	func _enqueue(level: String, message: String) -> void:
+		_mutex.lock()
+		_pending.append({ "level": level, "message": message })
+		_mutex.unlock()
 
 	func _log_message(message: String, error: bool) -> void:
-		if handler == null:
-			return
-		handler.call_deferred("_on_log_capture", "error" if error else "info", message)
+		_enqueue("error" if error else "info", message)
 
 	func _log_error(
 			function: String,
@@ -34,20 +48,15 @@ class CustomLogger extends Logger:
 			error_type: int,
 			script_backtraces: Array[ScriptBacktrace]
 	) -> void:
-		if handler == null:
-			return
-
 		var prefix: String = ""
-		# The column at which to print the trace. Should match the length of the
-		# unformatted text above it.
 		var trace_indent := 0
 
 		match error_type:
 			ERROR_TYPE_ERROR:
-				prefix = "[color=#f54][b]ERROR:[/b]"
+				prefix = "[color=%s][b]ERROR:[/b]" % LogPopUtils.COLOR_ERROR
 				trace_indent = 6
 			ERROR_TYPE_WARNING:
-				prefix = "[color=#fd4][b]WARNING:[/b]"
+				prefix = "[color=%s][b]WARNING:[/b]" % LogPopUtils.COLOR_WARNING
 				trace_indent = 8
 			ERROR_TYPE_SCRIPT:
 				prefix = "[color=#f4f][b]SCRIPT ERROR:[/b]"
@@ -59,27 +68,24 @@ class CustomLogger extends Logger:
 		var trace: String = "%*s %s (%s:%s)" % [trace_indent, "at:", function, file, line]
 		var script_backtraces_text: String = ""
 		for backtrace in script_backtraces:
-			script_backtraces_text += _format_limited_backtrace(backtrace, trace_indent - 3)
+			script_backtraces_text += _format_backtrace(backtrace, trace_indent - 3)
 
-		var message: String = "%s %s %s[/color]\n[color=#999]%s[/color]\n[color=#999]%s[/color]" % [
-			prefix,
-			code,
-			rationale,
-			trace,
-			script_backtraces_text,
-		]
+		# Engine errors build their own layout; stack blocks share COLOR_STACK with stream messages.
+		var stack := "[color=%s]%s[/color]" % [LogPopUtils.COLOR_STACK, trace]
+		if not script_backtraces_text.strip_edges().is_empty():
+			stack += "\n[color=%s]%s[/color]" % [LogPopUtils.COLOR_STACK, script_backtraces_text.strip_edges(false, true)]
+		var message: String = "%s %s %s[/color]\n%s\n" % [prefix, code, rationale, stack]
 
 		var level := "warn" if error_type == ERROR_TYPE_WARNING else "error"
-		handler.call_deferred("_on_log_capture", level, message)
+		_enqueue(level, message)
 
-	func _format_limited_backtrace(bt: ScriptBacktrace, indent_all: int) -> String:
+	func _format_backtrace(bt: ScriptBacktrace, indent_all: int) -> String:
 		if bt.is_empty():
 			return ""
 		var indent := " ".repeat(maxi(indent_all, 0))
 		var frame_indent := " ".repeat(maxi(indent_all, 0) + 4)
 		var text := "%s%s backtrace (most recent call first):\n" % [indent, bt.get_language_name()]
-		var count := mini(bt.get_frame_count(), 3)
-		for i in count:
+		for i in bt.get_frame_count():
 			text += "%s[%d] %s (%s:%d)\n" % [
 				frame_indent,
 				i,
@@ -90,18 +96,56 @@ class CustomLogger extends Logger:
 		return text
 
 
-# Use _init() to register the logger as early as possible.
 func _init() -> void:
-	_logger = CustomLogger.new()
-	_logger.handler = self
-	OS.add_logger(_logger)
+	_register_logger()
+
+
+func _enter_tree() -> void:
+	# Reparent calls exit_tree then enter_tree without _ready — re-register logger.
+	_register_logger()
+	set_process(true)
+
+
+func _ready() -> void:
+	set_process(true)
 
 
 func _exit_tree() -> void:
-	if _logger != null:
-		OS.remove_logger(_logger)
-		_logger.handler = null
+	# Unregister from OS only; keep CustomLogger + pending queue across reparent.
+	_unregister_logger_from_os()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		_unregister_logger_from_os()
 		_logger = null
+
+
+func _process(_delta: float) -> void:
+	_drain_pending_queue()
+
+
+func _drain_pending_queue() -> void:
+	if _logger == null:
+		return
+	var batch: Array = _logger.steal_pending()
+	for item in batch:
+		_on_log_capture(str(item["level"]), str(item["message"]))
+
+
+func _register_logger() -> void:
+	if _logger == null:
+		_logger = CustomLogger.new()
+	if _logger_registered:
+		return
+	OS.add_logger(_logger)
+	_logger_registered = true
+
+
+func _unregister_logger_from_os() -> void:
+	if _logger != null and _logger_registered:
+		OS.remove_logger(_logger)
+		_logger_registered = false
 
 
 func get_log_count() -> int:
@@ -163,3 +207,109 @@ func get_filtered_logs(types: Array[String], filter_text: String, max_logs: int)
 			result.insert(0, entry)
 			count += 1
 	return result
+
+
+# =============================================================================
+# [DISABLED] Heartbeat self-heal / ensure_logger() — optional fallback, off by default.
+#
+# Purpose: if the engine console still prints but the custom Logger stops receiving
+# callbacks, probe during quiet periods and re-register (remove + new + add_logger),
+# or call ensure_logger() after known-risky work.
+#
+# To re-enable: uncomment this block, call _process_heartbeat(delta) from _process,
+# and reconnect capture_failed in log_pop.gd if you want the overlay on failure.
+#
+# signal capture_failed
+# const HEARTBEAT_PREFIX := "[LogPopHeartbeat]"
+# const HEARTBEAT_INTERVAL_SEC := 15.0
+# const HEARTBEAT_MISS_LIMIT := 2
+# const REREGISTER_COOLDOWN_SEC := 3.0
+# var _capture_count := 0
+# var _last_seen_capture_count := 0
+# var _heartbeat_timer := 0.0
+# var _heartbeat_waiting := false
+# var _heartbeat_expect_count := 0
+# var _heartbeat_misses := 0
+# var _reregister_cooldown := 0.0
+# var _capture_failed_emitted := false
+# var _self_heal_enabled := true
+#
+# func _process_heartbeat(delta: float) -> void:
+# 	if not _self_heal_enabled:
+# 		return
+# 	if _reregister_cooldown > 0.0:
+# 		_reregister_cooldown = maxf(0.0, _reregister_cooldown - delta)
+# 	if _heartbeat_waiting and _capture_count > _heartbeat_expect_count:
+# 		_heartbeat_waiting = false
+# 		_heartbeat_misses = 0
+# 		_capture_failed_emitted = false
+# 	_heartbeat_timer += delta
+# 	if _heartbeat_timer < HEARTBEAT_INTERVAL_SEC:
+# 		return
+# 	_heartbeat_timer = 0.0
+# 	_on_heartbeat_tick()
+#
+# func _on_heartbeat_tick() -> void:
+# 	if _capture_count > _last_seen_capture_count:
+# 		_last_seen_capture_count = _capture_count
+# 		_heartbeat_waiting = false
+# 		_heartbeat_misses = 0
+# 		_capture_failed_emitted = false
+# 		return
+# 	if _heartbeat_waiting:
+# 		_heartbeat_waiting = false
+# 		_heartbeat_misses += 1
+# 		if _heartbeat_misses >= HEARTBEAT_MISS_LIMIT:
+# 			_try_self_heal()
+# 		return
+# 	_heartbeat_expect_count = _capture_count
+# 	_heartbeat_waiting = true
+# 	print("%s %d" % [HEARTBEAT_PREFIX, Time.get_ticks_msec()])
+#
+# func _try_self_heal() -> void:
+# 	if _reregister_cooldown > 0.0:
+# 		return
+# 	_reregister_cooldown = REREGISTER_COOLDOWN_SEC
+# 	_reregister_logger()
+# 	_heartbeat_expect_count = _capture_count
+# 	_heartbeat_waiting = true
+# 	_heartbeat_misses = 0
+# 	print("%s reregister %d" % [HEARTBEAT_PREFIX, Time.get_ticks_msec()])
+# 	call_deferred("_check_heal_result")
+#
+# func _check_heal_result() -> void:
+# 	var tree := get_tree()
+# 	if tree == null:
+# 		return
+# 	await tree.create_timer(0.4).timeout
+# 	if not is_inside_tree():
+# 		return
+# 	if _capture_count > _heartbeat_expect_count:
+# 		_heartbeat_waiting = false
+# 		_heartbeat_misses = 0
+# 		_capture_failed_emitted = false
+# 		return
+# 	if not _capture_failed_emitted:
+# 		_capture_failed_emitted = true
+# 		_add_log("warn", "[LogPop] Custom Logger capture appears dead after re-register.")
+# 		capture_failed.emit()
+#
+# func _reregister_logger() -> void:
+# 	_unregister_logger_from_os()
+# 	_logger = CustomLogger.new()
+# 	_register_logger()
+#
+# func ensure_logger() -> void:
+# 	_reregister_logger()
+# 	_heartbeat_misses = 0
+# 	_heartbeat_waiting = false
+# 	_capture_failed_emitted = false
+#
+# func get_capture_count() -> int:
+# 	return _capture_count
+#
+# # In _on_log_capture, also restore:
+# # _capture_count += 1
+# # _last_seen_capture_count = _capture_count
+# # if message.contains(HEARTBEAT_PREFIX): ... return
+# =============================================================================

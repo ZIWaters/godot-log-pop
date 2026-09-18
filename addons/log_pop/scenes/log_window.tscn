@@ -1,6 +1,8 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene format=3 uid="uid://bf4ho2vlt2sm1"]
 
-[ext_resource type="Script" path="res://addons/log_pop/scripts/log_window.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://n6y2uxtamgwv" path="res://addons/log_pop/scripts/log_window.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://c2cn84uea0ynk" path="res://addons/log_pop/theme/pop_theme.tres" id="2_n5g4w"]
+[ext_resource type="Texture2D" uid="uid://bfql2pratyw8h" path="res://addons/log_pop/theme/close_icon.svg" id="3_y3iq4"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_panel"]
 content_margin_left = 8.0
@@ -24,11 +26,11 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[node name="LogWindow" type="CanvasLayer"]
+[node name="LogWindow" type="CanvasLayer" unique_id=1184222047]
 layer = 768
 script = ExtResource("1_script")
 
-[node name="BgRect" type="ColorRect" parent="."]
+[node name="BgRect" type="ColorRect" parent="." unique_id=580632393]
 unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
@@ -37,42 +39,44 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.85)
 
-[node name="MainContainer" type="VBoxContainer" parent="."]
+[node name="MainContainer" type="VBoxContainer" parent="." unique_id=1829895633]
 unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_n5g4w")
 theme_override_constants/separation = 8
 
-[node name="TopRow" type="HBoxContainer" parent="MainContainer"]
+[node name="TopRow" type="HBoxContainer" parent="MainContainer" unique_id=1171445014]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
 theme_override_constants/separation = 8
 
-[node name="TypePanel" type="PanelContainer" parent="MainContainer/TopRow"]
-custom_minimum_size = Vector2(160, 0)
+[node name="TypePanel" type="PanelContainer" parent="MainContainer/TopRow" unique_id=1280898106]
+custom_minimum_size = Vector2(170, 0)
+custom_maximum_size = Vector2(170, -1)
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBox_panel")
 
-[node name="TypeVBox" type="VBoxContainer" parent="MainContainer/TopRow/TypePanel"]
+[node name="TypeVBox" type="VBoxContainer" parent="MainContainer/TopRow/TypePanel" unique_id=1195387569]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="TypeLabel" type="Label" parent="MainContainer/TopRow/TypePanel/TypeVBox"]
+[node name="TypeLabel" type="Label" parent="MainContainer/TopRow/TypePanel/TypeVBox" unique_id=1445987897]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "Log Types"
 
-[node name="TypeSelector" type="OptionButton" parent="MainContainer/TopRow/TypePanel/TypeVBox"]
+[node name="TypeSelector" type="OptionButton" parent="MainContainer/TopRow/TypePanel/TypeVBox" unique_id=1494499174]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-item_count = 7
 selected = 0
+item_count = 7
 popup/item_0/text = "All"
 popup/item_0/id = 0
 popup/item_1/text = "Error Only"
@@ -88,136 +92,148 @@ popup/item_5/id = 5
 popup/item_6/text = "Info + Warn"
 popup/item_6/id = 6
 
-[node name="FilterPanel" type="PanelContainer" parent="MainContainer/TopRow"]
-custom_minimum_size = Vector2(200, 0)
+[node name="FilterPanel" type="PanelContainer" parent="MainContainer/TopRow" unique_id=238995757]
+custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBox_panel")
 
-[node name="FilterVBox" type="VBoxContainer" parent="MainContainer/TopRow/FilterPanel"]
+[node name="FilterVBox" type="VBoxContainer" parent="MainContainer/TopRow/FilterPanel" unique_id=1357376414]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="FilterLabel" type="Label" parent="MainContainer/TopRow/FilterPanel/FilterVBox"]
+[node name="FilterLabel" type="Label" parent="MainContainer/TopRow/FilterPanel/FilterVBox" unique_id=1944443639]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "Filter"
 
-[node name="FilterInput" type="LineEdit" parent="MainContainer/TopRow/FilterPanel/FilterVBox"]
+[node name="FilterInput" type="LineEdit" parent="MainContainer/TopRow/FilterPanel/FilterVBox" unique_id=1891900450]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Filter text..."
 
-[node name="SettingsPanel" type="PanelContainer" parent="MainContainer/TopRow"]
+[node name="SettingsPanel" type="PanelContainer" parent="MainContainer/TopRow" unique_id=1127306418]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBox_panel")
 
-[node name="SettingsVBox" type="VBoxContainer" parent="MainContainer/TopRow/SettingsPanel"]
+[node name="SettingsVBox" type="VBoxContainer" parent="MainContainer/TopRow/SettingsPanel" unique_id=276975956]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="HistoryHBox" type="HBoxContainer" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox"]
+[node name="HistoryHBox" type="HBoxContainer" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox" unique_id=313630228]
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/separation = 4
 
-[node name="HistoryLabel" type="Label" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/HistoryHBox"]
+[node name="HistoryLabel" type="Label" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/HistoryHBox" unique_id=1946162509]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
+size_flags_horizontal = 2
 theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "Max Logs: 300"
 
-[node name="HistorySlider" type="HSlider" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/HistoryHBox"]
-unique_name_in_owner = true
+[node name="Spacer" type="Control" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/HistoryHBox" unique_id=45977247]
+custom_minimum_size = Vector2(4, 0)
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 0
-min_value = 50.0
+
+[node name="HistorySlider" type="HSlider" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/HistoryHBox" unique_id=926434201]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(175, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 4
+min_value = 100.0
 max_value = 2000.0
 step = 50.0
 value = 300.0
 
-[node name="FontHBox" type="HBoxContainer" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox"]
+[node name="FontHBox" type="HBoxContainer" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox" unique_id=2145385927]
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/separation = 4
 
-[node name="FontLabel" type="Label" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/FontHBox"]
+[node name="FontLabel" type="Label" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/FontHBox" unique_id=1112316821]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-size_flags_horizontal = 0
+size_flags_horizontal = 2
 size_flags_vertical = 0
 theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "Font Size: 16px"
 
-[node name="FontSlider" type="HSlider" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/FontHBox"]
-unique_name_in_owner = true
+[node name="Spacer" type="Control" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/FontHBox" unique_id=161376464]
+custom_minimum_size = Vector2(4, 0)
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 0
+
+[node name="FontSlider" type="HSlider" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/FontHBox" unique_id=1944302048]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(175, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 4
 min_value = 16.0
-max_value = 32.0
-step = 1.0
+max_value = 48.0
 value = 16.0
 
-[node name="RightPanel" type="PanelContainer" parent="MainContainer/TopRow"]
+[node name="RightPanel" type="PanelContainer" parent="MainContainer/TopRow" unique_id=2029941362]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBox_panel")
 
-[node name="RightVBox" type="VBoxContainer" parent="MainContainer/TopRow/RightPanel"]
+[node name="RightVBox" type="VBoxContainer" parent="MainContainer/TopRow/RightPanel" unique_id=2131536162]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="RightHBox" type="HBoxContainer" parent="MainContainer/TopRow/RightPanel/RightVBox"]
+[node name="RightHBox" type="HBoxContainer" parent="MainContainer/TopRow/RightPanel/RightVBox" unique_id=2059073445]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="DetachWindow" type="CheckButton" parent="MainContainer/TopRow/RightPanel/RightVBox/RightHBox"]
+[node name="DetachWindow" type="CheckButton" parent="MainContainer/TopRow/RightPanel/RightVBox/RightHBox" unique_id=461306562]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 0
-text = "Detach Window"
+text = " Detach Window "
+alignment = 1
 
-[node name="Spacer" type="Control" parent="MainContainer/TopRow/RightPanel/RightVBox/RightHBox"]
+[node name="Spacer" type="Control" parent="MainContainer/TopRow/RightPanel/RightVBox/RightHBox" unique_id=2009071957]
+custom_minimum_size = Vector2(8, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="CloseBtn" type="Button" parent="MainContainer/TopRow/RightPanel/RightVBox/RightHBox"]
+[node name="CloseBtn" type="Button" parent="MainContainer/TopRow/RightPanel/RightVBox/RightHBox" unique_id=1556603612]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(32, 26)
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0, 0, 1)
-text = "X"
+icon = ExtResource("3_y3iq4")
+icon_alignment = 1
+expand_icon = true
 
-[node name="OpenLogsFolderBtn" type="Button" parent="MainContainer/TopRow/RightPanel/RightVBox"]
+[node name="OpenLogsFolderBtn" type="Button" parent="MainContainer/TopRow/RightPanel/RightVBox" unique_id=1899858533]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Open Logs Folder"
 
-[node name="LogPanel" type="PanelContainer" parent="MainContainer"]
+[node name="LogPanel" type="PanelContainer" parent="MainContainer" unique_id=974540383]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBox_log")
 
-[node name="LogText" type="RichTextLabel" parent="MainContainer/LogPanel"]
+[node name="LogText" type="RichTextLabel" parent="MainContainer/LogPanel" unique_id=655255781]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 focus_mode = 2
 bbcode_enabled = true
-scroll_active = true
 scroll_following = true
-selection_enabled = true
 context_menu_enabled = true
+selection_enabled = true

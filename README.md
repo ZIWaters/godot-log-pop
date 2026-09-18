@@ -1,14 +1,10 @@
 # LogPop (GDScript)
 
-A **lightweight** in-game log viewer for **Godot 4**. Shows print / warning / error messages in an overlay while the game is running.
-
-Pure GDScript — **no .NET required**. Works in both **GDScript** and **C#** projects.
-
----
+In-game log viewer for **Godot 4.5+** (pure GDScript). Registers a custom [`Logger`](https://docs.godotengine.org/en/stable/classes/class_logger.html) via [`OS.add_logger()`](https://docs.godotengine.org/en/stable/classes/class_os.html#class-os-method-add-logger). Shows print / warning / error messages in an overlay while the game is running.
 
 ## Requirements
 
-- Godot **4.5** or newer (standard or .NET build)
+- Godot **4.5** or newer
 
 ## Install
 
@@ -16,7 +12,7 @@ Pure GDScript — **no .NET required**. Works in both **GDScript** and **C#** pr
 2. Open the project in Godot, then go to **Project → Project Settings → Plugins** and enable **LogPop**.
 3. Add a **LogPop** node to your main scene (or any scene that runs in-game).
 
-> Use only **one** LogPop node in the running game.
+> Use only one LogPop node in the running game.
 
 ## How to open the in-game log
 
@@ -32,13 +28,11 @@ Pure GDScript — **no .NET required**. Works in both **GDScript** and **C#** pr
 
 # 中文
 
-面向 **Godot 4** 的**轻量**游戏内日志查看器（纯 GDScript）。运行游戏时可在浮层中查看 print / 警告 / 错误信息。
-
-不依赖 .NET，**GDScript 项目与 C# 项目均可使用**。
+面向 **Godot 4.5+** 的游戏内日志查看器（纯 GDScript）。原理为 [`OS.add_logger()`](https://docs.godotengine.org/en/stable/classes/class_os.html#class-os-method-add-logger) 注册自定义 [`Logger`](https://docs.godotengine.org/en/stable/classes/class_logger.html)。运行游戏时可在浮层中查看 print / 警告 / 错误信息。
 
 ## 运行要求
 
-- Godot **4.5** 及以上（标准版或 .NET 版均可）
+- Godot **4.5** 及以上
 
 ## 安装
 
@@ -46,7 +40,7 @@ Pure GDScript — **no .NET required**. Works in both **GDScript** and **C#** pr
 2. 用 Godot 打开项目，进入 **项目 → 项目设置 → 插件**，启用 **LogPop**。
 3. 在主场景（或游戏运行时会加载的场景）中添加一个 **LogPop** 节点。
 
-> 运行中的游戏里请只放 **一个** LogPop 节点。
+> 运行中的游戏里请只放一个 LogPop 节点。
 
 ## 如何打开游戏内日志
 
@@ -54,6 +48,6 @@ Pure GDScript — **no .NET required**. Works in both **GDScript** and **C#** pr
 |------|------|
 | 键盘 | 检查器中的 `Toggle Hotkey`。默认：**Ctrl+L**。可选：**Ctrl+Alt+L**、**Ctrl+Alt+P**。 |
 | 触屏 | **三指长按**（时长：`Three Finger Hold Seconds`，默认约 0.8 秒）。 |
-| 出错时 | 默认在出现 **error** 时自动打开浮层（关闭时也会继续收日志）。**warning 不会**触发自动打开。 |
+| 报错时 | 默认在出现 **error** 时自动打开浮层（关闭时也会继续收日志）。**warning 不会**触发自动打开。 |
 
-**关闭出错自动弹窗：** 选中 **LogPop** 节点 → 在检查器中取消勾选 **Auto Open On Error**。
+**关闭报错自动弹窗：** 选中 **LogPop** 节点 → 在检查器中取消勾选 **Auto Open On Error**。

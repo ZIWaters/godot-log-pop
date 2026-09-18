@@ -6,13 +6,13 @@ extends Node
 const LogPopHandlerScript = preload("log_handler.gd")
 const LogPopWindowScript = preload("log_window.gd")
 
-## Max number of log lines kept on screen (50–2000).
-@export_range(50, 2000, 50) var log_max_count: int = 300
-## Overlay text size (16–32). Also applies to bold/mono styles.
-@export_range(16, 32, 1) var log_font_size: int = 16
+## Max number of log lines kept on screen (100–2000).
+@export_range(100, 2000, 50) var log_max_count: int = 300
+## Overlay text size (16–48). Also applies to bold/mono styles.
+@export_range(16, 48, 1) var log_font_size: int = 16
 ## If enabled, start with the log viewer in a separate OS window (desktop only).
 @export var use_detached_window: bool = false
-## If enabled, automatically show the overlay when an error is logged (warnings do not trigger this). Turn off to keep the overlay closed until you open it manually.
+## If enabled, automatically show the log viewer when an error is logged (warnings do not trigger this).
 @export var auto_open_on_error: bool = true
 ## Keyboard shortcut to show/hide the in-game log.
 @export_enum("Ctrl+L", "Ctrl+Alt+L", "Ctrl+Alt+P") var toggle_hotkey: int = 0

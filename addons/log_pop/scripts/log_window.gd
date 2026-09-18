@@ -6,6 +6,8 @@ const LogPopUtils = preload("log_utils.gd")
 const DEFAULT_HISTORY_SIZE := 300
 
 var _log_handler: LogPopHandlerScript
+## pop_theme.tres default_font_size designed for 1920×1080 (stretch scale ≈ 1).
+const THEME_BASE_FONT_SIZE := 20
 
 var _bg_rect: ColorRect
 var _main_container: Control
@@ -39,7 +41,58 @@ func init_ui(log_handler: LogPopHandlerScript) -> void:
 	_rebuild_display()
 
 
+func _ready() -> void:
+	# After entering the tree, stretch scale is reliable. Chrome UI only (not log RichTextLabel).
+	_apply_theme_font_for_stretch()
+
+
+func _apply_theme_font_for_stretch() -> void:
+	var scale := _get_ui_stretch_scale()
+	var font_size := maxi(1, roundi(float(THEME_BASE_FONT_SIZE) / scale))
+	_set_chrome_theme_font_size(font_size)
+
+
+func _set_chrome_theme_font_size(font_size: int) -> void:
+	var container := _main_container
+	if container == null:
+		container = get_node_or_null("%MainContainer") as Control
+	if container == null or container.theme == null:
+		return
+	var themed := container.theme.duplicate()
+	themed.default_font_size = font_size
+	container.theme = themed
+
+
+func _get_ui_stretch_scale() -> float:
+	var st := get_viewport().get_stretch_transform().get_scale()
+	var s := maxf(st.x, st.y)
+	return s if s > 0.001 else 1.0
+
+
+func _enter_tree() -> void:
+	# Reparent disconnects via _exit_tree; reconnect log_added.
+	_ensure_log_added_connected()
+	if _ui_ready:
+		_queue_visible_rebuild()
+
+
 func _exit_tree() -> void:
+	_disconnect_log_added()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		_disconnect_log_added()
+
+
+func _ensure_log_added_connected() -> void:
+	if _log_handler == null:
+		return
+	if not _log_handler.log_added.is_connected(_on_log_added):
+		_log_handler.log_added.connect(_on_log_added)
+
+
+func _disconnect_log_added() -> void:
 	if _log_handler != null and _log_handler.log_added.is_connected(_on_log_added):
 		_log_handler.log_added.disconnect(_on_log_added)
 
@@ -103,8 +156,12 @@ func toggle_visibility() -> void:
 			_switch_to_window_mode()
 		else:
 			_external_window.visible = not _external_window.visible
+			if _external_window.visible:
+				_queue_visible_rebuild()
 	else:
 		visible = not visible
+		if visible:
+			_queue_visible_rebuild()
 
 
 func ensure_visible() -> void:
@@ -113,8 +170,10 @@ func ensure_visible() -> void:
 			_switch_to_window_mode()
 		else:
 			_external_window.visible = true
+			_queue_visible_rebuild()
 	else:
 		visible = true
+		_queue_visible_rebuild()
 
 
 func _should_use_external() -> bool:
@@ -133,8 +192,7 @@ func _connect_signals() -> void:
 	_font_slider.value_changed.connect(_on_font_changed)
 	_filter_input.text_changed.connect(_on_filter_changed)
 	_type_selector.item_selected.connect(func(_i: int) -> void: _rebuild_display())
-	if _log_handler != null:
-		_log_handler.log_added.connect(_on_log_added)
+	_ensure_log_added_connected()
 
 
 func _on_close_pressed() -> void:
@@ -161,13 +219,14 @@ func _on_new_window_toggled(pressed: bool) -> void:
 
 func _switch_to_window_mode() -> void:
 	if is_instance_valid(_external_window):
+		_set_chrome_theme_font_size(THEME_BASE_FONT_SIZE)
 		_external_window.show()
 		return
 	_external_window = null
 
 	var main_size := DisplayServer.window_get_size(DisplayServer.MAIN_WINDOW_ID)
-	var new_size := Vector2i(int(main_size.x * 0.9), int(main_size.y * 0.9))
-	new_size = new_size.max(Vector2i(800, 600))
+	var new_size := Vector2i(int(main_size.x * 0.95), int(main_size.y * 0.95))
+	new_size = new_size.max(Vector2i(1152, 648))
 
 	_prev_embed_subwindows = get_tree().root.gui_embed_subwindows
 	get_tree().root.gui_embed_subwindows = false
@@ -183,8 +242,11 @@ func _switch_to_window_mode() -> void:
 	remove_child(_main_container)
 	_bg_rect.hide()
 	_external_window.add_child(_main_container)
+	# Detached window is not under game stretch — use baseline chrome font.
+	_set_chrome_theme_font_size(THEME_BASE_FONT_SIZE)
 	get_tree().root.add_child(_external_window)
 	_external_window.show()
+	_queue_visible_rebuild()
 
 
 func _switch_to_overlay_mode() -> void:
@@ -205,6 +267,8 @@ func _switch_to_overlay_mode() -> void:
 
 	add_child(_main_container)
 	_bg_rect.show()
+	_apply_theme_font_for_stretch()
+	_queue_visible_rebuild()
 
 
 func _on_external_window_close() -> void:
@@ -227,6 +291,10 @@ func _on_font_changed(value: float) -> void:
 
 func _on_filter_changed(_text: String) -> void:
 	_rebuild_display()
+
+
+func _queue_visible_rebuild() -> void:
+	call_deferred("_rebuild_display")
 
 
 func _on_log_added() -> void:
@@ -263,11 +331,15 @@ func _get_max_log_count() -> int:
 func _format_log_entry(entry: Dictionary) -> String:
 	var message := str(entry["message"])
 	var type := str(entry["type"])
-	if type == "info":
-		message = LogPopUtils.convert_ansi_to_bbcode(message)
-	elif type == "error" and not message.begins_with("[color="):
-		message = LogPopUtils.convert_ansi_to_bbcode(message)
-	return "[color=#fff][%s][/color] %s" % [entry["time"], message]
+	# push_error / push_warning already ship BBCode via _log_error — leave as-is.
+	if type == "error" and not message.begins_with("[color="):
+		message = LogPopUtils.format_stream_message(message, LogPopUtils.COLOR_ERROR)
+	elif type == "info":
+		message = LogPopUtils.format_stream_message(message)
+	message = message.strip_edges(false, true)
+	# Extra blank line after stack dumps only (not between "at" frames — those stay collapsed).
+	var end := "\n\n" if LogPopUtils.has_stack_chrome(message) else "\n"
+	return "[color=#fff][%s][/color] %s%s" % [entry["time"], message, end]
 
 
 func _append_new_logs() -> void:
