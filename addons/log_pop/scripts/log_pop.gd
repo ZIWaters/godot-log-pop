@@ -1,5 +1,5 @@
 @tool
-@icon("res://addons/log_pop/icon.svg")
+@icon("res://addons/log_pop/theme/icon.svg")
 class_name LogPop
 extends Node
 

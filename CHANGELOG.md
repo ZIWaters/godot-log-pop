@@ -1,7 +1,7 @@
 ## 0.3.0
 
 - Logger 回调改为在 RefCounted 上 Mutex 入队，主线程出队（避免工作线程访问 Node）。
-- 修复父节点 Reparent 后不再捕获：`enter_tree` 重新 `OS.add_logger` 和 UI 不刷新：`log_added` 在 `enter_tree` 重连。
+- 修复父节点 Reparent 后不再捕获日志、UI 不刷新的问题。
 
 ## 0.2.0
 
