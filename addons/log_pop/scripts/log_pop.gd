@@ -10,7 +10,7 @@ const LogPopWindowScript = preload("log_window.gd")
 @export_range(100, 2000, 50) var log_max_count: int = 300
 ## Overlay text size (16–48). Also applies to bold/mono styles.
 @export_range(16, 48, 1) var log_font_size: int = 16
-## If enabled, start with the log viewer in a separate OS window (desktop only).
+## If enabled, open the log viewer in a separate OS window when shown (desktop only).
 @export var use_detached_window: bool = false
 ## If enabled, automatically show the log viewer when an error is logged (warnings do not trigger this).
 @export var auto_open_on_error: bool = true
@@ -135,7 +135,6 @@ func _get_window_scene_path() -> String:
 func _add_log_window_to_tree() -> void:
 	add_child(_log_window)
 	_log_window.hide()
-	_log_window.apply_detached_if_requested()
 	if _pending_auto_open:
 		_pending_auto_open = false
 		_ensure_window_visible()

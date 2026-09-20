@@ -1,3 +1,7 @@
+## 1.2.0
+
+- 修复已知 bug
+
 ## 1.1.0
 
 - Logger 回调改为在 RefCounted 上 Mutex 入队，主线程出队（避免工作线程访问 Node）。

@@ -133,11 +133,6 @@ func apply_export_settings(history_size: int, font_size: int, use_new_window: bo
 	_cb_new_window.set_pressed_no_signal(use_new_window)
 
 
-func apply_detached_if_requested() -> void:
-	if _cb_new_window.button_pressed and _is_desktop_platform():
-		_switch_to_window_mode()
-
-
 func _apply_font_size(font_size: int) -> void:
 	_log_text.add_theme_font_size_override("normal_font_size", font_size)
 	_log_text.add_theme_font_size_override("bold_font_size", font_size)
@@ -150,34 +145,50 @@ func has_external_window() -> bool:
 	return is_instance_valid(_external_window)
 
 
+## True while the log UI is on screen (overlay CanvasLayer or detached Window).
+func is_viewer_open() -> bool:
+	if _is_detached_host_active():
+		return _external_window.visible
+	return visible
+
+
 func toggle_visibility() -> void:
-	if _should_use_external():
-		if not is_instance_valid(_external_window):
-			_switch_to_window_mode()
-		else:
-			_external_window.visible = not _external_window.visible
-			if _external_window.visible:
-				_queue_visible_rebuild()
-	else:
-		visible = not visible
-		if visible:
-			_queue_visible_rebuild()
+	set_viewer_open(not is_viewer_open())
 
 
 func ensure_visible() -> void:
-	if _should_use_external():
-		if not is_instance_valid(_external_window):
-			_switch_to_window_mode()
+	set_viewer_open(true)
+
+
+## Open/close the viewer. Display host follows the Detach checkbox (overlay vs Window).
+func set_viewer_open(open: bool) -> void:
+	if open:
+		_sync_host_to_preferred_mode()
+		if _prefer_detached():
+			_external_window.show()
+			visible = false
 		else:
-			_external_window.visible = true
-			_queue_visible_rebuild()
-	else:
-		visible = true
+			visible = true
+			if _bg_rect != null:
+				_bg_rect.show()
 		_queue_visible_rebuild()
+	else:
+		if _is_detached_host_active():
+			_external_window.hide()
+		else:
+			visible = false
+
+
+func _prefer_detached() -> bool:
+	return _cb_new_window != null and _cb_new_window.button_pressed and _is_desktop_platform()
+
+
+func _is_detached_host_active() -> bool:
+	return is_instance_valid(_external_window)
 
 
 func _should_use_external() -> bool:
-	return _cb_new_window != null and _cb_new_window.button_pressed and _is_desktop_platform()
+	return _prefer_detached()
 
 
 func _is_desktop_platform() -> bool:
@@ -196,10 +207,7 @@ func _connect_signals() -> void:
 
 
 func _on_close_pressed() -> void:
-	if is_instance_valid(_external_window):
-		_external_window.hide()
-	else:
-		visible = false
+	set_viewer_open(false)
 
 
 func _on_open_logs_folder_pressed() -> void:
@@ -208,21 +216,28 @@ func _on_open_logs_folder_pressed() -> void:
 	OS.shell_open(ProjectSettings.globalize_path(log_dir))
 
 
-func _on_new_window_toggled(pressed: bool) -> void:
+func _on_new_window_toggled(_pressed: bool) -> void:
 	if not _is_desktop_platform():
 		return
-	if pressed:
-		_switch_to_window_mode()
+	# Preference changed: keep open/closed; only move UI to the matching host.
+	var open := is_viewer_open()
+	_sync_host_to_preferred_mode()
+	if open:
+		set_viewer_open(true)
+
+
+## Move UI onto the host that matches the current Detach preference (does not open/close).
+func _sync_host_to_preferred_mode() -> void:
+	if _prefer_detached():
+		_ensure_detached_host()
 	else:
-		_switch_to_overlay_mode()
+		_ensure_overlay_host()
 
 
-func _switch_to_window_mode() -> void:
+func _ensure_detached_host() -> void:
 	if is_instance_valid(_external_window):
 		_set_chrome_theme_font_size(THEME_BASE_FONT_SIZE)
-		_external_window.show()
 		return
-	_external_window = null
 
 	var main_size := DisplayServer.window_get_size(DisplayServer.MAIN_WINDOW_ID)
 	var new_size := Vector2i(int(main_size.x * 0.95), int(main_size.y * 0.95))
@@ -237,21 +252,27 @@ func _switch_to_window_mode() -> void:
 	_external_window.size = new_size
 	_external_window.unresizable = false
 	_external_window.always_on_top = false
+	_external_window.visible = false
 	_external_window.close_requested.connect(_on_external_window_close)
 
-	remove_child(_main_container)
+	if _main_container.get_parent() == self:
+		remove_child(_main_container)
+	elif _main_container.get_parent() != null and _main_container.get_parent() != _external_window:
+		_main_container.get_parent().remove_child(_main_container)
 	_bg_rect.hide()
 	_external_window.add_child(_main_container)
 	# Detached window is not under game stretch — use baseline chrome font.
 	_set_chrome_theme_font_size(THEME_BASE_FONT_SIZE)
 	get_tree().root.add_child(_external_window)
-	_external_window.show()
-	_queue_visible_rebuild()
 
 
-func _switch_to_overlay_mode() -> void:
+func _ensure_overlay_host() -> void:
 	if not is_instance_valid(_external_window):
 		_external_window = null
+		if _main_container.get_parent() != self:
+			if _main_container.get_parent() != null:
+				_main_container.get_parent().remove_child(_main_container)
+			add_child(_main_container)
 		return
 
 	var win := _external_window
@@ -266,15 +287,12 @@ func _switch_to_overlay_mode() -> void:
 	win.queue_free()
 
 	add_child(_main_container)
-	_bg_rect.show()
 	_apply_theme_font_for_stretch()
-	_queue_visible_rebuild()
 
 
 func _on_external_window_close() -> void:
-	# Keep detach mode; just hide so Ctrl+L / hotkey can reopen the same window.
-	if is_instance_valid(_external_window):
-		_external_window.hide()
+	# Keep detach preference / host; just close so Ctrl+L can reopen.
+	set_viewer_open(false)
 
 
 func _on_history_changed(value: float) -> void:
