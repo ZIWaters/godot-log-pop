@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://bf4ho2vlt2sm1"]
 
-[ext_resource type="Script" uid="uid://n6y2uxtamgwv" path="res://addons/log_pop/scripts/log_window.gd" id="1_script"]
-[ext_resource type="Theme" uid="uid://c2cn84uea0ynk" path="res://addons/log_pop/theme/pop_theme.tres" id="2_n5g4w"]
-[ext_resource type="Texture2D" uid="uid://bfql2pratyw8h" path="res://addons/log_pop/theme/close_icon.svg" id="3_y3iq4"]
+[ext_resource type="Script" uid="uid://n6y2uxtamgwv" path="res://Test/godot-log-pop-原版/godot-log-pop-main/addons/log_pop/scripts/log_window.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://c2cn84uea0ynk" path="res://Test/godot-log-pop-原版/godot-log-pop-main/addons/log_pop/theme/pop_theme.tres" id="2_n5g4w"]
+[ext_resource type="Script" uid="uid://dvnrpt5qoq3w7" path="res://Test/godot-log-pop-原版/godot-log-pop-main/addons/log_pop/scripts/RedCloseButton.gd" id="3_10koh"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_panel"]
 content_margin_left = 8.0
@@ -119,16 +119,21 @@ layout_mode = 2
 size_flags_horizontal = 0
 theme_override_styles/panel = SubResource("StyleBox_panel")
 
-[node name="SettingsVBox" type="VBoxContainer" parent="MainContainer/TopRow/SettingsPanel" unique_id=276975956]
+[node name="MarginContainer" type="MarginContainer" parent="MainContainer/TopRow/SettingsPanel" unique_id=1732423923]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_right = 0
 
-[node name="HistoryHBox" type="HBoxContainer" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox" unique_id=313630228]
+[node name="SettingsVBox" type="VBoxContainer" parent="MainContainer/TopRow/SettingsPanel/MarginContainer" unique_id=276975956]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HistoryHBox" type="HBoxContainer" parent="MainContainer/TopRow/SettingsPanel/MarginContainer/SettingsVBox" unique_id=313630228]
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/separation = 4
 
-[node name="HistoryLabel" type="Label" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/HistoryHBox" unique_id=1946162509]
+[node name="HistoryLabel" type="Label" parent="MainContainer/TopRow/SettingsPanel/MarginContainer/SettingsVBox/HistoryHBox" unique_id=1946162509]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
@@ -136,11 +141,11 @@ size_flags_horizontal = 2
 theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "Max Logs: 300"
 
-[node name="Spacer" type="Control" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/HistoryHBox" unique_id=45977247]
+[node name="Spacer" type="Control" parent="MainContainer/TopRow/SettingsPanel/MarginContainer/SettingsVBox/HistoryHBox" unique_id=45977247]
 custom_minimum_size = Vector2(4, 0)
 layout_mode = 2
 
-[node name="HistorySlider" type="HSlider" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/HistoryHBox" unique_id=926434201]
+[node name="HistorySlider" type="HSlider" parent="MainContainer/TopRow/SettingsPanel/MarginContainer/SettingsVBox/HistoryHBox" unique_id=926434201]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(175, 0)
 layout_mode = 2
@@ -151,12 +156,12 @@ max_value = 2000.0
 step = 50.0
 value = 300.0
 
-[node name="FontHBox" type="HBoxContainer" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox" unique_id=2145385927]
+[node name="FontHBox" type="HBoxContainer" parent="MainContainer/TopRow/SettingsPanel/MarginContainer/SettingsVBox" unique_id=2145385927]
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/separation = 4
 
-[node name="FontLabel" type="Label" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/FontHBox" unique_id=1112316821]
+[node name="FontLabel" type="Label" parent="MainContainer/TopRow/SettingsPanel/MarginContainer/SettingsVBox/FontHBox" unique_id=1112316821]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
@@ -165,11 +170,11 @@ size_flags_vertical = 0
 theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "Font Size: 16px"
 
-[node name="Spacer" type="Control" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/FontHBox" unique_id=161376464]
+[node name="Spacer" type="Control" parent="MainContainer/TopRow/SettingsPanel/MarginContainer/SettingsVBox/FontHBox" unique_id=161376464]
 custom_minimum_size = Vector2(4, 0)
 layout_mode = 2
 
-[node name="FontSlider" type="HSlider" parent="MainContainer/TopRow/SettingsPanel/SettingsVBox/FontHBox" unique_id=1944302048]
+[node name="FontSlider" type="HSlider" parent="MainContainer/TopRow/SettingsPanel/MarginContainer/SettingsVBox/FontHBox" unique_id=1944302048]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(175, 0)
 layout_mode = 2
@@ -208,12 +213,12 @@ size_flags_horizontal = 3
 
 [node name="CloseBtn" type="Button" parent="MainContainer/TopRow/RightPanel/RightVBox/RightHBox" unique_id=1556603612]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(40, 40)
+custom_minimum_size = Vector2(60, 70)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0, 0, 1)
-icon = ExtResource("3_y3iq4")
+autowrap_trim_flags = 0
 icon_alignment = 1
-expand_icon = true
+script = ExtResource("3_10koh")
 
 [node name="OpenLogsFolderBtn" type="Button" parent="MainContainer/TopRow/RightPanel/RightVBox" unique_id=1899858533]
 unique_name_in_owner = true
